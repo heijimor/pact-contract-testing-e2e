@@ -1,0 +1,40 @@
+version: "3.3"
+services:
+  postgres:
+    image: postgres:12
+    environment:
+      POSTGRES_USER: pactbroker
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: pactbroker
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - pact-network
+
+  pact-broker:
+    image: pactfoundation/pact-broker
+    ports:
+      - "9292:9292"
+    volumes:
+      - ./pacts:/pacts
+    environment:
+      PACT_BROKER_DATABASE_ADAPTER: "postgres"
+      PACT_BROKER_DATABASE_USERNAME: "pactbroker"
+      PACT_BROKER_DATABASE_PASSWORD: "mypassword"
+      PACT_BROKER_DATABASE_HOST: "postgres"
+      PACT_BROKER_DATABASE_NAME: "pactbroker"
+      PACT_BROKER_WEBHOOK_HOST_WHITELIST: localhost,host.docker.internal
+      PACT_BROKER_WEBHOOK_SCHEME_WHITELIST: https,http
+    depends_on:
+      - postgres
+    networks:
+      - pact-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  postgres_data:
+
+networks:
+  pact-network:
+    driver: bridge

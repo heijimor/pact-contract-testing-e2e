@@ -1,0 +1,48 @@
+{
+  "consumer": {
+    "name": "ReactApp"
+  },
+  "interactions": [
+    {
+      "description": "a request for a user",
+      "request": {
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "method": "GET",
+        "path": "/user/1"
+      },
+      "response": {
+        "body": {
+          "id": 1,
+          "name": "John",
+          "surName": "Doe"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "$.body": {
+            "match": "type"
+          }
+        },
+        "status": 200
+      }
+    }
+  ],
+  "metadata": {
+    "pact-js": {
+      "version": "13.1.1"
+    },
+    "pactRust": {
+      "ffi": "0.4.22",
+      "models": "1.2.3"
+    },
+    "pactSpecification": {
+      "version": "2.0.0"
+    }
+  },
+  "provider": {
+    "name": "UserService"
+  }
+}

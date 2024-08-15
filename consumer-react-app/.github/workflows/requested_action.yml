@@ -1,0 +1,37 @@
+name: Main Workflow in Project A
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Project A
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          architecture: "x64"
+
+      - name: Install Pact Broker
+        run: |
+          apt-get update
+          apt-get install -y ruby-full
+          gem install pact_broker-client
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Consumer Tests
+        run: npm run test:consumer
+
+      - name: Publish Pact Files
+        run: pact-broker publish ./pacts --consumer-app-version=1.0.19 --broker-base-url=http://localhost:9292
+
+      - name: Run tests in Project B
+        run: |
+          curl http://localhost:3000/simulating-step-trigger
