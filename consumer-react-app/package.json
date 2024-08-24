@@ -1,6 +1,6 @@
 {
   "name": "consumer-react-app",
-  "version": "0.1.0",
+  "version": "1.0.34",
   "private": true,
   "dependencies": {
     "@pact-foundation/pact": "^13.1.1",

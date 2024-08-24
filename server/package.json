@@ -6,7 +6,7 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "test": "jest --coverage",
-    "test:verifier": "jest --runInBand src/tests/verifier.spec.js",
+    "test:verifier": "jest --runInBand ./src/tests/verifier.spec.js",
     "publish:broker": "node ./src/tests/publish.js"
   },
   "keywords": [],

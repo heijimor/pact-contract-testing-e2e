@@ -1,0 +1,72 @@
+name: Callable Workflow
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        type: string
+        required: true
+        default: "Guest"
+        description: "The name of the person to greet"
+      version:
+        type: string
+        required: true
+        default: ""
+        description: "Consumer version"
+    outputs:
+      result:
+        description: "Result of the provider verifier"
+        value: ${{ steps.set-result.outputs.result }}
+
+jobs:
+  callable-job:
+    runs-on: ubuntu-latest
+    outputs:
+      output2: ${{ steps.can-i-deploy.outputs.deployable }}
+    steps:
+      - name: Checkout Server
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          architecture: "x64"
+
+      - name: Install Pact Broker
+        run: |
+          apt-get update
+          apt-get install -y ruby-full
+          gem install pact_broker-client
+
+      - name: Install Dependencies
+        run: |
+          cd server
+          npm install
+
+      - name: Run Provider Verifier
+        id: verify
+        run: |
+          cd server
+          mkdir pacts
+          ls -la
+          npm run test:verifier
+        continue-on-error: true
+
+      - name: Run can-i-deploy and get JSON response
+        id: can-i-deploy
+        run: |
+          export PACT_BROKER_CAN_I_DEPLOY_DRY_RUN=true
+          result=$(pact-broker can-i-deploy \
+            --pacticipant ReactApp --version ${{ inputs.version }} \
+            --pacticipant UserService --version 1.0.0 \
+            --broker-base-url http://localhost:9292 \
+            --output json)
+
+          deployable=$(echo "$result" | jq -r '.summary.deployable')
+          echo "deployable=$deployable" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Set Output
+        id: set-result
+        run: |
+          echo "result=${{ steps.can-i-deploy.outputs.deployable }}" >> $GITHUB_OUTPUT

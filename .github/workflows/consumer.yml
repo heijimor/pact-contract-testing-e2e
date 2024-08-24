@@ -1,0 +1,65 @@
+name: Main Workflow in Project A
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-trigger-provider:
+    runs-on: ubuntu-latest
+    outputs:
+      package_version: ${{ steps.get-version.outputs.version }}
+    steps:
+      - name: Checkout Project A
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          architecture: "x64"
+
+      - name: Install Pact Broker
+        run: |
+          apt-get update
+          apt-get install -y ruby-full
+          gem install pact_broker-client
+
+      - name: Install Dependencies
+        run: |
+          cd consumer-react-app
+          npm install
+
+      - name: Run Consumer Tests
+        run: |
+          cd consumer-react-app
+          npm run test:consumer
+
+      - name: Extract Version from package.json
+        id: get-version
+        run: |
+          cd consumer-react-app
+          version=$(node -p "require('./package.json').version")
+          echo "PACKAGE_VERSION=$version" >> $GITHUB_ENV
+          echo "::set-output name=version::$version"
+
+      - name: Publish Pact Files
+        run: |
+          cd consumer-react-app
+          pact-broker publish ./pacts --consumer-app-version=$PACKAGE_VERSION --broker-base-url=http://localhost:9292
+
+  use-callable:
+    name: Invoking Provider
+    needs: deploy-trigger-provider
+    uses: ./.github/workflows/provider.yml
+    with:
+      name: "Jimin"
+      version: ${{ needs.deploy-trigger-provider.outputs.package_version }}
+
+  check-trigger-provider:
+    name: Verify provider results
+    needs: use-callable
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Verifier Result
+        run: echo "Verifier result ${{ needs.use-callable.outputs.result }}"
