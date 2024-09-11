@@ -48,7 +48,7 @@ npm i
 npm start
 ```
 
-Open another termianl and run this command:
+Open another terminal and run this command:
 
 ```console
 jest --runInBand ./src/tests/verifier.spec.js
